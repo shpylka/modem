@@ -21,7 +21,7 @@ classdef Channel < matlab.System
     end
     
     properties (Access=private)
-        pDelayStepSize = 0.001;
+        pDelayStepSize = 0.0000001;
         pDelayMaximum = 8;
         pDelayMinimum = 0;
         pDelay = 0;
