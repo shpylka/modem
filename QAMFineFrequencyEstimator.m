@@ -52,13 +52,15 @@ classdef QAMFineFrequencyEstimator< matlab.System
         function stepImpl(obj, u)
             
             % Find phase error
-            phErr =   imag(u)*obj.Demaper(real(u)) - real(u)*obj.Demaper(imag(u));
-            %phErr =   imag(u)*sign(real(u)) - real(u)*sign(imag(u));
+            %phErr =   imag(u)*obj.Demaper(real(u)) - real(u)*obj.Demaper(imag(u));
+
+            phErr =   imag(u)*sign(real(u)) - real(u)*sign(imag(u));
             % Loop Filter
             loopFiltOut = step(obj.pLoopFilter,phErr*obj.IntegratorGain); 
             
             % Direct Digital Synthesizer
             DDSOut = step(obj.pIntegrator,phErr*obj.ProportionalGain + loopFiltOut);
+
             obj.OUTPhase =  obj.DigitalSynthesizerGain * DDSOut;
            
 

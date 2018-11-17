@@ -21,7 +21,7 @@ classdef Channel < matlab.System
     end
     
     properties (Access=private)
-        pDelayStepSize = 0.0000001;
+        pDelayStepSize = 0.00000000;
         pDelayMaximum = 8;
         pDelayMinimum = 0;
         pDelay = 0;
@@ -60,10 +60,11 @@ classdef Channel < matlab.System
             rotatedSignal = step(obj.pPhaseFreqOffset,TxSignal);
             
             % Delayed signal
-            delayedSignal = step(obj.pVariableTimeDelay, rotatedSignal, obj.DelayArray);
+            %delayedSignal = step(obj.pVariableTimeDelay, rotatedSignal, obj.DelayArray);
             
             % Signal passing through AWGN channel
-            corruptSignal = step(obj.pAWGNChannel, delayedSignal);
+            %corruptSignal = step(obj.pAWGNChannel, delayedSignal);
+            corruptSignal = step(obj.pAWGNChannel, rotatedSignal);
         end
         
         function resetImpl(obj)

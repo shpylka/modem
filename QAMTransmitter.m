@@ -29,7 +29,7 @@ classdef QAMTransmitter < matlab.System
     methods (Access=protected)
         function setupImpl(obj)
             obj.pQAMModulator  = comm.RectangularQAMModulator('ModulationOrder', 2^obj.ModulationOrder,...
-                'BitInput',true);
+                'BitInput',true,'NormalizationMethod','Average power');
             obj.pTransmitterFilter = dsp.FIRInterpolator(obj.UpsamplingFactor, ...
                 obj.TransmitterFilterCoefficients);
         end

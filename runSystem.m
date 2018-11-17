@@ -38,13 +38,18 @@ coder.extrinsic('createScopes','runScopes','releaseScopes')
 %  
      QAMScopes = createScopes;
 
-
+t(1) = 0;
 while(1)
     transmittedSignal = step(QAMTx); % Transmitter
-
+    
     corruptSignal = step(QAMChan,transmittedSignal);
 
-    [RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation] = step(QAMRx,corruptSignal); % Receiver
+    [RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation,temp] = step(QAMRx,corruptSignal); % Receiver
+    t = [1:length(temp)]*prmQAMTxRx.Ts + t(end);
+    plot(t,mod(temp,pi/2))
+    hold on
+    plot(t,mod(-2*pi*prmQAMTxRx.FrequencyOffset*t - prmQAMTxRx.PhaseOffset,pi/2),'r')
+    hold off
 
     stepScopes(QAMScopes,RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation); % Plots all the scopes
     

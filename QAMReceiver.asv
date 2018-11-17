@@ -64,7 +64,7 @@ classdef QAMReceiver < matlab.System
                 'ProportionalGain', K1,...
                 'IntegratorGain', K2,...
                 'DigitalSynthesizerGain', -1*obj.PhaseRecoveryGain);
-obj.PhaseRecoveryGain
+
            
             % Refer C.57 to C.61 in Michael Rice's "Digital Communications 
             % - A Discrete-Time Approach" for K1 and K2
@@ -86,7 +86,7 @@ obj.PhaseRecoveryGain
         end
         
         
-        function [y,frequencyOffsetCompensation,timingRecBuffer,ProcessCanstellation,temp] = stepImpl(obj, y)
+        function [RCRxSignal,frequencyOffsetCompensation,timingRecBuffer,ProcessCanstellation] = stepImpl(obj, y)
             
             AGCSignal = y;%obj.DesiredAmplitude*step(obj.pAGC, y);
             % Pass the signal through Square-Root Raised Cosine Received
@@ -102,22 +102,20 @@ obj.PhaseRecoveryGain
             frequencyOffsetCompensation = coder.nullcopy(zeros(size(y)));
             timingRecBuffer = coder.nullcopy(zeros(size(y)));
             RCRxSignal = coder.nullcopy(zeros(size(y)));
-            temp = coder.nullcopy(zeros(size(y)));
             % Scalar processing for fine frequency compensation and timing
             % recovery 
             for i=1:length(AGCSignal)
                 
-                temp(i) = obj.pFineFreqEstimator.OUTPhase;
+
                 frequencyOffsetCompensation(i) = AGCSignal(i)*exp(1i*obj.pFineFreqEstimator.OUTPhase);
                 RCRxSignal(i) = step(obj.pRxFilter,frequencyOffsetCompensation(i));
                 %step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
                 
                 % Timing recovery of the received data
                 %[dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec, frequencyOffsetCompensation(i));
-                %if (isDataValid)
-                if (mod(i-1,obj.PostFilterOversampling)==0)
+                if (isDataValid)
                     step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
-                    ProcessCanstellation = [ProcessCanstellation(2:end);RCRxSignal(i)];
+                    ProcessCanstellation = [ProcessCanstellation(2:end);dataOut];
                 else
                     step(obj.pFineFreqEstimator,0);
                 end
@@ -143,7 +141,7 @@ obj.PhaseRecoveryGain
         end
         
         function N = getNumOutputsImpl(~)
-            N = 5;
+            N = 4;
         end
     end
 end
