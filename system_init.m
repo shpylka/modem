@@ -27,13 +27,13 @@ SimParams.RaisedCosineFilterSpan = 20; % Filter span of Raised Cosine Tx Rx filt
 
 % Channel parameters
 SimParams.PhaseOffset = 0; % in degrees
-SimParams.EbNo = 115; % in dB
-SimParams.FrequencyOffset = 2; % Frequency offset introduced by channel impairments in Hertz
+SimParams.EbNo = 10; % in dB
+SimParams.FrequencyOffset = 12; % Frequency offset introduced by channel impairments in Hertz
 
 SimParams.CoarseCompFrequencyResolution = 50; % Frequency resolution for coarse frequency compensation
 SimParams.PhaseRecoveryLoopBandwidth = 0.0005*SimParams.Upsampling; % Normalized loop bandwidth for fine frequency compensation
 SimParams.PhaseRecoveryDampingFactor = 1/sqrt(2); % Damping Factor for fine frequency compensation
-SimParams.TimingRecoveryLoopBandwidth = 0.0005; % Normalized loop bandwidth for timing recovery
+SimParams.TimingRecoveryLoopBandwidth = 0.001; % Normalized loop bandwidth for timing recovery
 SimParams.TimingRecoveryDampingFactor = 1/sqrt(2); % Damping Factor for timing recovery
 
 % Generate square root raised cosine filter coefficients (required only for MATLAB example)
@@ -42,7 +42,7 @@ SimParams.Rolloff = 0.5;
 % Square root raised cosine transmit filter
 SimParams.TransmitterFilterCoefficients = ...
   rcosdesign(SimParams.Rolloff, SimParams.RaisedCosineFilterSpan, ...
-  SimParams.Upsampling*4,'sqrt');
+  SimParams.Upsampling,'sqrt');
 
 % Square root raised cosine receive filter
 SimParams.ReceiverFilterCoefficients = ...

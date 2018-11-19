@@ -60,20 +60,21 @@ classdef QAMScopes < matlab.System
             
                % Plots the constellation of the filtered signal
                step(obj.pRxConstellation,RCRxSignal);
-               
+
                % Plots the spectrum scope of the filtered signal
                step(obj.pRxScope,RCRxSignal);
-      
+
                % Plots the constellation of the phase recovered signal
                step(obj.pFreqRecConstellation,coarseCompBuffer);
-               
+
                % Plots the constellation of the phase recovered signal
                               
                            
                step(obj.pProcessConstellation,temp);
-               
+
                % Plots the time scope of normalized timing error
                step(obj.pTimingError, timingRecBuffer);
+
         end
         
         function resetImpl(obj)

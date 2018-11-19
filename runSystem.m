@@ -11,7 +11,7 @@ prmQAMTxRx = system_init; % QAM system parameters
 coder.extrinsic('createScopes','runScopes','releaseScopes')
 
     QAMTx = QAMTransmitter(...
-        'UpsamplingFactor', prmQAMTxRx.Upsampling*4, ...
+        'UpsamplingFactor', prmQAMTxRx.Upsampling, ...
         'ModulationOrder', prmQAMTxRx.M, ...
         'FrameSize', prmQAMTxRx.FrameSize,...
         'TransmitterFilterCoefficients',prmQAMTxRx.TransmitterFilterCoefficients);
@@ -39,19 +39,37 @@ coder.extrinsic('createScopes','runScopes','releaseScopes')
      QAMScopes = createScopes;
 
 t(1) = 0;
+ff = [-prmQAMTxRx.FrameSize*prmQAMTxRx.Upsampling/2:prmQAMTxRx.FrameSize*prmQAMTxRx.Upsampling/2-1]*prmQAMTxRx.Fs/prmQAMTxRx.FrameSize/prmQAMTxRx.Upsampling;
+
 while(1)
     transmittedSignal = step(QAMTx); % Transmitter
 
-    corruptSignal = step(QAMChan,transmittedSignal(1:4:end));
+    corruptSignal = step(QAMChan,transmittedSignal);
 
     [RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation,temp] = step(QAMRx,corruptSignal); % Receiver
+
+    subplot(2,3,1)
+    plot(real(RCRxSignal),imag(RCRxSignal),'.');
+    axis([-2,2,-2,2]);
+    subplot(2,3,2)
+    plot(real(frequencyOffsetCompensate),imag(frequencyOffsetCompensate),'.')
+    axis([-2,2,-2,2]);
+    subplot(2,3,3)
+       plot(real(ProcessConstellation),imag(ProcessConstellation),'.')
+    axis([-2,2,-2,2]);
+    subplot(2,3,4)
     t = [1:length(temp)]*prmQAMTxRx.Ts + t(end);
     plot(t,mod(temp,pi/2))
     hold on
     plot(t,mod(-2*pi*prmQAMTxRx.FrequencyOffset*t - prmQAMTxRx.PhaseOffset,pi/2),'r')
     hold off
-
-    stepScopes(QAMScopes,RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation); % Plots all the scopes
+    subplot(2,3,5)
+    semilogy(abs(fftshift(fft(RCRxSignal))))
+    subplot(2,3,6)
+    plot(timingRecBuffer)
+    axis([0,length(timingRecBuffer),-0.5,1.5])
+    drawnow
+   % stepScopes(QAMScopes,RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation); % Plots all the scopes
     
 end
 

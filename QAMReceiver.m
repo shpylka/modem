@@ -98,7 +98,7 @@ classdef QAMReceiver < matlab.System
             
             % Buffers to store values required for plotting
             %coarseCompBuffer = coder.nullcopy(complex(zeros(size(coarseCompSignal))));
-            ProcessCanstellation = coder.nullcopy(zeros(length(y)/obj.PostFilterOversampling,1));
+            ProcessCanstellation = coder.nullcopy(zeros(length(y),1));
             frequencyOffsetCompensation = coder.nullcopy(zeros(size(y)));
             timingRecBuffer = coder.nullcopy(zeros(size(y)));
             RCRxSignal = coder.nullcopy(zeros(size(y)));
