@@ -11,7 +11,7 @@ prmQAMTxRx = system_init; % QAM system parameters
 coder.extrinsic('createScopes','runScopes','releaseScopes')
 
     QAMTx = QAMTransmitter(...
-        'UpsamplingFactor', prmQAMTxRx.Upsampling, ...
+        'UpsamplingFactor', prmQAMTxRx.Upsampling*4, ...
         'ModulationOrder', prmQAMTxRx.M, ...
         'FrameSize', prmQAMTxRx.FrameSize,...
         'TransmitterFilterCoefficients',prmQAMTxRx.TransmitterFilterCoefficients);
@@ -41,8 +41,8 @@ coder.extrinsic('createScopes','runScopes','releaseScopes')
 t(1) = 0;
 while(1)
     transmittedSignal = step(QAMTx); % Transmitter
-    
-    corruptSignal = step(QAMChan,transmittedSignal);
+
+    corruptSignal = step(QAMChan,transmittedSignal(1:4:end));
 
     [RCRxSignal,frequencyOffsetCompensate,timingRecBuffer,ProcessConstellation,temp] = step(QAMRx,corruptSignal); % Receiver
     t = [1:length(temp)]*prmQAMTxRx.Ts + t(end);

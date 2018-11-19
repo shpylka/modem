@@ -64,29 +64,33 @@ classdef QAMReceiver < matlab.System
                 'ProportionalGain', K1,...
                 'IntegratorGain', K2,...
                 'DigitalSynthesizerGain', -1*obj.PhaseRecoveryGain);
-
+obj.PhaseRecoveryGain
            
             % Refer C.57 to C.61 in Michael Rice's "Digital Communications 
             % - A Discrete-Time Approach" for K1 and K2
 
-            theta = obj.TimingRecoveryLoopBandwidth/...
-                (obj.TimingRecoveryDampingFactor + ...
-                0.25/obj.TimingRecoveryDampingFactor)/obj.PostFilterOversampling;
-            d = 1 + 2*obj.TimingRecoveryDampingFactor*theta + theta*theta;
-
-            K1 = (4*obj.TimingRecoveryDampingFactor*theta/d)/...
-                (obj.TimingErrorDetectorGain*obj.TimingRecoveryGain);
-            K2 = (4*theta*theta/d)/...
-                (obj.TimingErrorDetectorGain*obj.TimingRecoveryGain);
-
-            obj.pTimingRec = TimingRecovery('ProportionalGain', K1,...
-                                            'IntegratorGain', K2,...
-                                            'PostFilterOversampling', obj.PostFilterOversampling);
+% % %             theta = obj.TimingRecoveryLoopBandwidth/...
+% % %                 (obj.TimingRecoveryDampingFactor + ...
+% % %                 0.25/obj.TimingRecoveryDampingFactor)/obj.PostFilterOversampling;
+% % %             d = 1 + 2*obj.TimingRecoveryDampingFactor*theta + theta*theta;
+% % % 
+% % %             K1 = (4*obj.TimingRecoveryDampingFactor*theta/d)/...
+% % %                 (obj.TimingErrorDetectorGain*obj.TimingRecoveryGain);
+% % %             K2 = (4*theta*theta/d)/...
+% % %                 (obj.TimingErrorDetectorGain*obj.TimingRecoveryGain);
+% % % 
+% % %             obj.pTimingRec = TimingRecovery('ProportionalGain', K1,...
+% % %                                             'IntegratorGain', K2,...
+% % %                                             'PostFilterOversampling', obj.PostFilterOversampling);
+            obj.pTimingRec = comm.SymbolSynchronizer('TimingErrorDetector', 'Early-Late (non-data-aided)',...
+                                            'DampingFactor', obj.TimingRecoveryDampingFactor,...
+                                            'NormalizedLoopBandwidth',obj.TimingRecoveryLoopBandwidth,...
+                                            'SamplesPerSymbol', obj.PostFilterOversampling);            
 
         end
         
         
-        function [RCRxSignal,frequencyOffsetCompensation,timingRecBuffer,ProcessCanstellation] = stepImpl(obj, y)
+        function [y,frequencyOffsetCompensation,timingRecBuffer,ProcessCanstellation,temp] = stepImpl(obj, y)
             
             AGCSignal = y;%obj.DesiredAmplitude*step(obj.pAGC, y);
             % Pass the signal through Square-Root Raised Cosine Received
@@ -102,19 +106,22 @@ classdef QAMReceiver < matlab.System
             frequencyOffsetCompensation = coder.nullcopy(zeros(size(y)));
             timingRecBuffer = coder.nullcopy(zeros(size(y)));
             RCRxSignal = coder.nullcopy(zeros(size(y)));
+            temp = coder.nullcopy(zeros(size(y)));
             % Scalar processing for fine frequency compensation and timing
             % recovery 
             for i=1:length(AGCSignal)
                 
-
+                temp(i) = obj.pFineFreqEstimator.OUTPhase;
                 frequencyOffsetCompensation(i) = AGCSignal(i)*exp(1i*obj.pFineFreqEstimator.OUTPhase);
                 RCRxSignal(i) = step(obj.pRxFilter,frequencyOffsetCompensation(i));
                 %step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
                 
                 % Timing recovery of the received data
-                %[dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec, frequencyOffsetCompensation(i));
-                if (isDataValid)
-                    step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
+                %%[dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec,RCRxSignal(i));
+                dataOut = step(obj.pTimingRec,RCRxSignal(i));
+                if (~isemp)
+                %if (mod(i-1,obj.PostFilterOversampling)==0)
+                    step(obj.pFineFreqEstimator,dataOut);
                     ProcessCanstellation = [ProcessCanstellation(2:end);dataOut];
                 else
                     step(obj.pFineFreqEstimator,0);
@@ -141,7 +148,7 @@ classdef QAMReceiver < matlab.System
         end
         
         function N = getNumOutputsImpl(~)
-            N = 4;
+            N = 5;
         end
     end
 end

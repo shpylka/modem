@@ -64,7 +64,7 @@ classdef QAMReceiver < matlab.System
                 'ProportionalGain', K1,...
                 'IntegratorGain', K2,...
                 'DigitalSynthesizerGain', -1*obj.PhaseRecoveryGain);
-obj.PhaseRecoveryGain
+
            
             % Refer C.57 to C.61 in Michael Rice's "Digital Communications 
             % - A Discrete-Time Approach" for K1 and K2
@@ -113,11 +113,11 @@ obj.PhaseRecoveryGain
                 %step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
                 
                 % Timing recovery of the received data
-                %[dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec, frequencyOffsetCompensation(i));
-                %if (isDataValid)
-                if (mod(i-1,obj.PostFilterOversampling)==0)
-                    step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
-                    ProcessCanstellation = [ProcessCanstellation(2:end);RCRxSignal(i)];
+                [dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec,RCRxSignal(i));
+                if (isDataValid)
+                %if (mod(i-1,obj.PostFilterOversampling)==0)
+                    step(obj.pFineFreqEstimator,dataOut);
+                    ProcessCanstellation = [ProcessCanstellation(2:end);dataOut];
                 else
                     step(obj.pFineFreqEstimator,0);
                 end
