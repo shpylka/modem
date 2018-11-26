@@ -4,7 +4,6 @@
 classdef QAMReceiver < matlab.System
     %#codegen
     properties (Nontunable)
-        DesiredAmplitude = 0.5;
         ModulationOrder = 4;
         DownsamplingFactor = 2;
         PhaseRecoveryLoopBandwidth = 0.01;
@@ -16,7 +15,7 @@ classdef QAMReceiver < matlab.System
         PhaseRecoveryGain = 1;
         TimingErrorDetectorGain = 5.4;
         TimingRecoveryGain = -1;
-        SampleRate = 200000;
+        SymbolRate = 200000;
         ReceiverFilterCoefficients = 1;
     end
     
@@ -98,13 +97,14 @@ classdef QAMReceiver < matlab.System
             
             % Buffers to store values required for plotting
             %coarseCompBuffer = coder.nullcopy(complex(zeros(size(coarseCompSignal))));
-            ProcessCanstellation = coder.nullcopy(zeros(length(y),1));
-            frequencyOffsetCompensation = coder.nullcopy(zeros(size(y)));
-            timingRecBuffer = coder.nullcopy(zeros(size(y)));
-            RCRxSignal = coder.nullcopy(zeros(size(y)));
-            temp = coder.nullcopy(zeros(size(y)));
+% % %             ProcessCanstellation = coder.nullcopy(zeros(length(y),1));
+% % %             frequencyOffsetCompensation = coder.nullcopy(zeros(size(y)));
+% % %             timingRecBuffer = coder.nullcopy(zeros(size(y)));
+% % %             RCRxSignal = coder.nullcopy(zeros(size(y)));
+% % %             temp = coder.nullcopy(zeros(size(y)));
             % Scalar processing for fine frequency compensation and timing
             % recovery 
+            ProcessCanstellation = [];
             for i=1:length(AGCSignal)
                 
                 temp(i) = obj.pFineFreqEstimator.OUTPhase;
@@ -117,7 +117,7 @@ classdef QAMReceiver < matlab.System
                 if (isDataValid)
                 %if (mod(i-1,obj.PostFilterOversampling)==0)
                     step(obj.pFineFreqEstimator,dataOut);
-                    ProcessCanstellation = [ProcessCanstellation(2:end);dataOut];
+                    ProcessCanstellation = [ProcessCanstellation;dataOut];
                 else
                     step(obj.pFineFreqEstimator,0);
                 end

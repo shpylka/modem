@@ -8,10 +8,11 @@ classdef Channel < matlab.System
         PhaseOffset = 47;
         SignalPower = 0.25;
         UpsamplingFactor = 4;
+        ChannelDownsampling = 2;
         EbNo = 7;
         BitsPerSymbol = 2;
         FrequencyOffset = 5000;
-        SampleRate = 200000;
+        SymbolRate = 200000;
     end
     
     properties (Access=private)
@@ -22,11 +23,10 @@ classdef Channel < matlab.System
     end
     
     properties (Access=private)
-        pDelayStepSize = -0.0001;
+        pDelayStepSize = 0.000001;
 %        pDelayMaximum = 8;
 %        pDelayMinimum = 0;
-        pDelay = 0.1;
-%        DelayArray = [];
+        pDelay = 0.5;
     end
     
     methods
@@ -37,10 +37,10 @@ classdef Channel < matlab.System
     
     methods (Access=protected)
         function setupImpl(obj, ~)
-            obj.pPhaseFreqOffset = comm.PhaseFrequencyOffset('PhaseOffset', obj.PhaseOffset,'FrequencyOffset', obj.FrequencyOffset,'SampleRate',obj.SampleRate);
+            obj.pPhaseFreqOffset = comm.PhaseFrequencyOffset('PhaseOffset', obj.PhaseOffset,'FrequencyOffset', obj.FrequencyOffset,'SampleRate',obj.SymbolRate*obj.UpsamplingFactor);
 %            obj.pVariableTimeDelay = dsp.VariableFractionalDelay('InterpolationMethod','Farrow','FilterLength',8,'MaximumDelay',  obj.pDelayMaximum);
-            obj.pAWGNChannel = comm.AWGNChannel('EbNo', obj.EbNo,'BitsPerSymbol', obj.BitsPerSymbol,'SignalPower', obj.SignalPower,'SamplesPerSymbol', obj.UpsamplingFactor);
-            obj.pResampler = InterpolationResampling('mu',obj.pDelay,'delta', obj.pDelayStepSize);
+            obj.pAWGNChannel = comm.AWGNChannel('EbNo', obj.EbNo,'BitsPerSymbol', obj.BitsPerSymbol,'SignalPower', obj.SignalPower,'SamplesPerSymbol', obj.UpsamplingFactor/obj.ChannelDownsampling);
+            obj.pResampler = InterpolationResampling('mu',obj.pDelay,'delta', obj.pDelayStepSize,'ChannelDownsampling',obj.ChannelDownsampling);
         end
         
         
@@ -49,9 +49,10 @@ classdef Channel < matlab.System
             % Signal undergoes phase/frequency offset
             rotatedSignal = step(obj.pPhaseFreqOffset,TxSignal);
             
-            % Delayed signal
-            delayedSignal = step(obj.pResampler, rotatedSignal);
-            
+            % Resampling signal
+            delayedSignal= step(obj.pResampler,rotatedSignal)*sqrt(obj.ChannelDownsampling);
+
+
             % Signal passing through AWGN channel
             corruptSignal = step(obj.pAWGNChannel, delayedSignal);
             
@@ -73,6 +74,10 @@ classdef Channel < matlab.System
         
         function N = getNumInputsImpl(~)
             N = 1; 
+        end
+        
+        function num = getNumOutputsImpl(~)
+           num=1; 
         end
     end
 end

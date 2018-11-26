@@ -6,16 +6,16 @@ function SimParams = system_init
 %load commqpsktxrx_sbits_100.mat; % length 174
 % General simulation parameters
 SimParams.M = 6; % M-PSK alphabet size
-SimParams.TransmitterUpsampling = 8; % Upsampling factor
-SimParams.ChannelDownsampling = 2;
+SimParams.TransmitterUpsampling = 2; % Upsampling factor
+SimParams.ChannelDownsampling = 4;
 SimParams.FilterDownsampling = 1; % Downsampling factor
-SimParams.PostFilterOversampling = 4;
+SimParams.PostFilterOversampling = 2;
 SimParams.SymbolRate = 2e5; % Sample rate in Hertz
 
 
 
 % Tx parameters
-SimParams.FrameSize = 2048;
+SimParams.FrameSize = 8192;
 
 K = 1;
 A = 1/sqrt(2);
@@ -29,13 +29,13 @@ SimParams.RaisedCosineFilterSpan = 20; % Filter span of Raised Cosine Tx Rx filt
 
 % Channel parameters
 SimParams.PhaseOffset = 0; % in degrees
-SimParams.EbNo = 120; % in dB
-SimParams.FrequencyOffset = 4; % Frequency offset introduced by channel impairments in Hertz
+SimParams.EbNo = 20; % in dB
+SimParams.FrequencyOffset = 12; % Frequency offset introduced by channel impairments in Hertz
 
 SimParams.CoarseCompFrequencyResolution = 50; % Frequency resolution for coarse frequency compensation
-SimParams.PhaseRecoveryLoopBandwidth = 0.0001*SimParams.TransmitterUpsampling/SimParams.ChannelDownsampling; % Normalized loop bandwidth for fine frequency compensation
+SimParams.PhaseRecoveryLoopBandwidth = 0.0004*SimParams.TransmitterUpsampling/SimParams.ChannelDownsampling; % Normalized loop bandwidth for fine frequency compensation
 SimParams.PhaseRecoveryDampingFactor = 1/sqrt(2); % Damping Factor for fine frequency compensation
-SimParams.TimingRecoveryLoopBandwidth = 0.01; % Normalized loop bandwidth for timing recovery
+SimParams.TimingRecoveryLoopBandwidth = 0.0004; % Normalized loop bandwidth for timing recovery
 SimParams.TimingRecoveryDampingFactor = 1/sqrt(2); % Damping Factor for timing recovery
 
 % Generate square root raised cosine filter coefficients (required only for MATLAB example)

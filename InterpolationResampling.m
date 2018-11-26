@@ -10,11 +10,12 @@ classdef InterpolationResampling < matlab.System
     properties (Nontunable)
         mu = 0;
         delta = 0;
-
+        ChannelDownsampling = 1;
     end
     
     properties (Access=private)
         pMU
+        DownSampleCount
         pDelayBuffer1
         pDelayBuffer2
         pDelayBuffer3
@@ -24,6 +25,8 @@ classdef InterpolationResampling < matlab.System
     methods
         function obj = InterpolationResampling(varargin)
             setProperties(obj,nargin,varargin{:});
+            obj.pMU = obj.mu;
+            obj.DownSampleCount = 0;
         end
     end
     
@@ -31,28 +34,35 @@ classdef InterpolationResampling < matlab.System
         function setupImpl(obj, ~)
             [obj.pDelayBuffer1, obj.pDelayBuffer2, obj.pDelayBuffer3] = ...
                 deal(complex(0,0));
-            obj.pMU = 0;
+            obj.DownSampleCount = 0;
         end
         
-        function [dataOut] = stepImpl(obj, data)
-
+        function dataOut = stepImpl(obj, data)
             dataOut = [];
             i=0;
             while (i<length(data))
                 i=i+1;
-                interp_sempl =  obj.pDelayBuffer2 + ...
+                obj.DownSampleCount = obj.DownSampleCount +1; 
+                if (mod(obj.DownSampleCount-1,obj.ChannelDownsampling) == 0)
+                    interp_sempl =  obj.pDelayBuffer2 + ...
                                 obj.pMU*  (-data(i)/6+obj.pDelayBuffer1/1 - obj.pDelayBuffer2/2 - obj.pDelayBuffer3/3)+...
                                 obj.pMU^2*(           obj.pDelayBuffer1/2 - obj.pDelayBuffer2/1 + obj.pDelayBuffer3/2)+...
                                 obj.pMU^3*( data(i)/6-obj.pDelayBuffer1/2 + obj.pDelayBuffer2/2 - obj.pDelayBuffer3/6);
-                dataOut = [dataOut; interp_sempl];
+                    dataOut = [dataOut; interp_sempl];
+                end
                 obj.pMU = obj.pMU + obj.delta;
                 if (obj.pMU < 0)
                     obj.pMU = 1 + obj.pMU;
-                    interp_sempl =  obj.pDelayBuffer2 + ...
+                    obj.DownSampleCount = obj.DownSampleCount +1;
+                    
+                    if (mod(obj.DownSampleCount-1,obj.ChannelDownsampling) == 0)
+                        interp_sempl =  obj.pDelayBuffer2 + ...
                                     obj.pMU*  (-data(i)/6+obj.pDelayBuffer1/1 - obj.pDelayBuffer2/2 - obj.pDelayBuffer3/3)+...
                                     obj.pMU^2*(           obj.pDelayBuffer1/2 - obj.pDelayBuffer2/1 + obj.pDelayBuffer3/2)+...
                                     obj.pMU^3*( data(i)/6-obj.pDelayBuffer1/2 + obj.pDelayBuffer2/2 - obj.pDelayBuffer3/6);
-                    dataOut = [dataOut; interp_sempl];                
+                        dataOut = [dataOut; interp_sempl];
+                    end
+                    obj.pMU = obj.pMU + obj.delta;
                 end
                 if (obj.pMU > 1)
                     obj.pMU = obj.pMU-1;
@@ -73,13 +83,15 @@ classdef InterpolationResampling < matlab.System
                 obj.pDelayBuffer2, ...
                 obj.pDelayBuffer3] = deal(complex(0,0));
 
-
+            obj.pMU = obj.mu;
         end
         
       
         function N = getNumOutputsImpl(~)
             N = 1;
         end
+                
+
     end
     
 
