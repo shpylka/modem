@@ -17,8 +17,7 @@ classdef QAMReceiver < matlab.System
         TimingRecoveryGain = -1;
         SymbolRate = 200000;
         ReceiverFilterCoefficients = 1;
-        InterpolationFactor = 1;
-        InterpolationCoefficients = 1; 
+        InterpolationFactor
     end
     
     properties (Access=private)
@@ -85,8 +84,8 @@ classdef QAMReceiver < matlab.System
                                             'IntegratorGain', K2,...
                                             'PostFilterOversampling', obj.PostFilterOversampling);
 
-            obj.pInterpolator = dsp.FIRInterpolator('InterpolationFactor',obj.InterpolationFactor,...
-                'Numerator',obj.InterpolationCoefficients);
+            obj.pInterpolator = dsp.FIRInterpolator('InterpolationFactor',2,...
+                'Numerator',fir1(121,0.4));
         end
         
         
@@ -118,8 +117,8 @@ classdef QAMReceiver < matlab.System
                 %step(obj.pFineFreqEstimator,frequencyOffsetCompensation(i));
                 InterpolateData = step(obj.pInterpolator,RCRxSignal(i));
                 % Timing recovery of the received data
-                for k=1:obj.InterpolationFactor
-                    [dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec,InterpolateData(k)*obj.InterpolationFactor);
+                for k=1:2
+                    [dataOut, isDataValid, timingRecBuffer(i)] = step(obj.pTimingRec,InterpolateData(k)*2);
                     if (isDataValid)
                     %if (mod(i-1,obj.PostFilterOversampling)==0)
                         step(obj.pFineFreqEstimator,dataOut);
